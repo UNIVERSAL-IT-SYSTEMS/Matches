@@ -1,0 +1,27 @@
+{
+	"name": "Matches",
+	"author": "Marco Ammon <ammon.marco@t-online.de> (Liquipedia.net)",
+	"url": "GITHUB",
+	"descriptionmsg": "matches-desc",
+	"version": "0.1",
+	"license-name": "GPL-3.0+",
+	"type": "parserhook",
+	"requires": {
+		"MediaWiki": ">= 1.25.0"
+	},
+	"ExtensionMessagesFiles": {
+		"MatchesMagic": "Matches.i18n.magic.php"
+	},
+	"MessagesDirs": {
+		"Matches": [ "i18n" ]
+	},
+	"Hooks": {
+		"": {
+			"": [ "" ]
+		}
+	},
+	"AutoloadClasses": {
+		"": ""
+	},
+	"manifest_version": 1
+}
