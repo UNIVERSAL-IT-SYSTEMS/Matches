@@ -43,19 +43,19 @@ class Matches {
 		}
 		$match = array();
 		if (isset($options['pageid'])) {
-			if ($options['pageid'] > 1) {
+			if ($options['pageid'] > 0) {
 				$match['pageid'] = $options['pageid'];
 			} else {
-				return '<strong class="error">' . wfMessage('matches-pageid-must-be-a-number-greater-than-1')->text() . '</strong>';
+				return '<strong class="error">' . wfMessage('matches-pageid-must-be-a-number-greater-than-0')->text() . '</strong>';
 			}
 		} else {
 			return '<strong class="error">' . wfMessage('matches-pageid-cannot-be-empty')->text() . '</strong>'; 
 		}
 		if (isset($options['matchid'])){
-			if ($options['matchid'] > 1) {
+			if ($options['matchid'] >= 0) {
 				$match['matchid'] = $options['matchid'];
 			} else {
-				return '<strong class="error">' . wfMessage('matches-matchid-must-be-a-number-greater-than-1')->text() . '</strong>';
+				return '<strong class="error">' . wfMessage('matches-matchid-must-be-a-positive-number')->text() . '</strong>';
 			}
 		} else {
 			return '<strong class="error">' . wfMessage('matches-matchid-cannot-be-empty')->text() . '</strong>'; 
@@ -108,7 +108,7 @@ class Matches {
 				$match['winner'] = 2;
 				break;
 			case 'draw':
-				$match['winner'] = d;
+				$match['winner'] = 'd';
 				break;
 		}
 		if($options['walkover'] == 1 OR $options['walkover'] == 2){
