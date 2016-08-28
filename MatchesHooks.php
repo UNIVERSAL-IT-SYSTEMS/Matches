@@ -17,3 +17,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+class MatchesHooks {
+	
+	/*
+	/ Registering render callbacks with the parser
+	*/
+	public static function onParserFirstCallInit ( &$parser ) {
+		$parser->setFunctionHook( 'StoreMatch', 'Matches::storeMatch' );
+		$parser->setFunctionHook( 'StoreGame', 'Matches::storeGame' );
+		$parser->setFunctionHook( 'MatchID', 'Matches::getMatchID' );
+	}
+	
+	/*
+	 * Removes matches associated with pageId of deleted page
+	 */
+	public static function onArticleDeleteComplete( WikiPage &$article,
+			User &$user, $reason, $id, Content $content = null, LogEntry $logEntry ) { 
+		//pageid should NEVER be 0 or negative
+		if ($id < 1) {
+			return false;
+		}
+		return Matches::deleteMatchesAndGames($id);
+	}
+	
+	/*
+	 * Removes matches associated with old pageId before the move
+	 * TODO: Chech if pages get purged after moving
+	 */
+	public static function onTitleMoveComplete( Title &$title, Title &$newtitle,
+			User &$user, $oldid, $newid, $reason, Revision $revision ) {
+		return Matches::deleteMatchesAndGames($oldid);		
+	}
+	
+	/*
+	 * Updates database tables after upgrading. If not installed before, tables are created
+	 */
+	public static function onLoadExtensionSchemaUpdates(DatabaseUpdater $updater ) {
+		global $wgScriptPath;
+		$wiki = substr($wgScriptPath, 1 );
+		$updater->addExtensionTable('matches_' . $wiki .
+			'_matches', __DIR__ . '/sql/matches.sql');
+		$updater->addExtensionTable('matches_' . $wiki .
+			'_games', __DIR__ . '/sql/games.sql');
+		
+	}
+}
+?>

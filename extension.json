@@ -16,12 +16,21 @@
 		"Matches": [ "i18n" ]
 	},
 	"Hooks": {
-		"": {
-			"": [ "" ]
-		}
+		"LoadExtensionSchemaUpdates": [
+			"MatchesHooks::onLoadExtensionSchemaUpdates"
+		],
+		"ParserFirstCallInit": [
+			"MatchesHooks::onParserFirstCallInit"
+		],
+		"OnArticleDeleteComplete": [ 
+			"MatchesHooks::onArticleDeleteComplete" 
+		],
+		"OnTitleMoveComplete": [
+			"MatchesHook::onTitleMoveComplete"
+		]		
 	},
 	"AutoloadClasses": {
-		"": ""
+		"MatchesHooks": "MatchesHooks.php"
 	},
 	"manifest_version": 1
 }
