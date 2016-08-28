@@ -23,11 +23,11 @@
  * @author Marco Ammon (Clubfan)
  */
 class Matches {
-
 	/*
 	 * Switch by game
 	 * @return: Returns highest matchID + 1
 	 */
+
 	public static function getMatchID($parser) {
 		global $wgScriptPath;
 		$wiki = substr($wgScriptPath, 1);
@@ -37,19 +37,94 @@ class Matches {
 	}
 
 	public static function storeMatch(&$parser) {
-		$options = extractOptions( array_slice(func_get_args(), 1) );
-		if (! isParsingLatestRevision( $parser ) ){
+		$options = extractOptions(array_slice(func_get_args(), 1));
+		if (!isParsingLatestRevision($parser)) {
 			return false;
 		}
-		
+		$match = array();
+		if (isset($options['pageid'])) {
+			if ($options['pageid'] > 1) {
+				$match['pageid'] = $options['pageid'];
+			} else {
+				return '<strong class="error">' . wfMessage('matches-pageid-must-be-a-number-greater-than-1')->text() . '</strong>';
+			}
+		} else {
+			return '<strong class="error">' . wfMessage('matches-pageid-cannot-be-empty')->text() . '</strong>'; 
+		}
+		if (isset($options['matchid'])){
+			if ($options['matchid'] > 1) {
+				$match['matchid'] = $options['matchid'];
+			} else {
+				return '<strong class="error">' . wfMessage('matches-matchid-must-be-a-number-greater-than-1')->text() . '</strong>';
+			}
+		} else {
+			return '<strong class="error">' . wfMessage('matches-matchid-cannot-be-empty')->text() . '</strong>'; 
+		}
+		if (isset($options['date'])) {
+			try {
+				$date = new DateTime($options['date']);
+				$match['date'] = $date;
+			} catch (Exception $ex) {
+				return '<strong class="error">' . wfMessage('matches-date-invalid')->text() . '</strong>';
+			}			
+		}
+		if (is_string($options['player1'])){
+			//TODO: Ensure escapation before inserting into db!
+			$match['participation1'] = $options['player1'];
+		} else {
+			$match['participation1'] = 'TBD';
+		}
+		if (is_string($options['player2'])){
+			//TODO: Ensure escapation before inserting into db!
+			$match['participant2'] = $options['player2'];
+		} else {
+			$match['participant2'] = 'TBD';
+		}
+		if (is_string($options['tournament'])){
+			$match['tournament'] = $options['tournament'];
+		}
+		if (is_string($options['tier'])){
+			//Maybe compare to array of allowed tiers
+			$match['tier'] = $options['tier'];
+		}
+		if (is_string($options['tname'])){
+			$match['tname'] = $options['tname'];
+		}
+		if (is_string($options['ticon'])){
+			$match['ticon'] = $options['ticon'];
+		}
+		$match['finished'] = ($options['finished'] == 'true');
+		if (is_numeric($options['p1score'])){
+			$match['p1score'] = $options['p1score'];
+		}
+		if (is_numeric($options['p2score'])){
+			$match['p2score'] = $options['p2score'];
+		}
+		switch($options['winner']){
+			case '1':
+				$match['winner'] = 1;
+				break;
+			case '2':
+				$match['winner'] = 2;
+				break;
+			case 'draw':
+				$match['winner'] = d;
+				break;
+		}
+		if($options['walkover'] == 1 OR $options['walkover'] == 2){
+			$match['walkover'] = $options['walkover'];
+		}
+		if (is_string($options['mode'])){
+			$match['mode'] = $options['mode'];
+		}
+		//TODO: Pass $match to DB function
 	}
 
 	public static function storeGame(&$parser) {
-		$options = extractOptions( array_slice(func_get_args(), 1) );
-		if (! isParsingLatestRevision( $parser ) ){
+		$options = extractOptions(array_slice(func_get_args(), 1));
+		if (!isParsingLatestRevision($parser)) {
 			return false;
 		}
-		
 	}
 
 	public static function deleteMatchesAndGames($pageID) {
@@ -62,14 +137,15 @@ class Matches {
 	 * @returns boolean
 	 */
 	function isParsingLatestRevision(Parser $parser) {
-		$mTitle = $parser -> getTitle();
-		if ( $mTitle == null ){
+		$mTitle = $parser->getTitle();
+		if ($mTitle == null) {
 			return false;
 		}
-		$parsingRevisionID = $parser -> getRevisionId();
-		$latestRevisionID = $mTitle -> getLatestRevisionId();
+		$parsingRevisionID = $parser->getRevisionId();
+		$latestRevisionID = $mTitle->getLatestRevisionId();
 		return $parsingRevisionID === $latestRevisionID;
 	}
+
 	/**
 	 * From: https://www.mediawiki.org/wiki/Manual:Parser_functions
 	 * Converts an array of values in form [0] => "name=value" into a real
