@@ -67,4 +67,8 @@ mode VARCHAR(31),
 details JSON
 )/*wgDBTableOptions*/;
 
+CREATE INDEX /*_*//*i*/matches_p1 ON /*_*/matches (participant_1);
+CREATE INDEX /*_*//*i*/matches_p2 ON /*_*/matches (participant_2);
+CREATE INDEX /*_*//*i*/matches_date ON /*_*/matches (m_date);
+
 Commit;

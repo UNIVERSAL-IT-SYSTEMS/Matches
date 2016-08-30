@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use MediaWiki\Logger\LoggerFactory;
+
 /**
  * Description of Matches
  *
@@ -29,10 +31,12 @@ class Matches {
 	 */
 
 	public static function getMatchID($parser) {
-		global $wgScriptPath;
-		$wiki = substr($wgScriptPath, 1);
 		//TODO: Add DB query for highest matchID
-		$matchID = 0;
+		$dbRead = wfGetDB(DB_MASTER);
+		$res = $dbRead->select(
+				'matches', 'm_id', '
+');
+		$matchID = $d;
 		return $matchID + 1;
 	}
 
@@ -42,65 +46,101 @@ class Matches {
 			return false;
 		}
 		$match = array();
-		if (isset($options['pageid'])) {
+		$match['m_id'] = null;
+		if (is_numeric($options['pageid'])) {
 			if ($options['pageid'] > 0) {
-				$match['pageid'] = $options['pageid'];
+				$match['page_id'] = $options['pageid'];
 			} else {
 				return '<strong class="error">' . wfMessage('matches-pageid-must-be-a-number-greater-than-0')->text() . '</strong>';
 			}
 		} else {
-			return '<strong class="error">' . wfMessage('matches-pageid-cannot-be-empty')->text() . '</strong>'; 
-		}
-		if (isset($options['matchid'])){
-			if ($options['matchid'] >= 0) {
-				$match['matchid'] = $options['matchid'];
-			} else {
-				return '<strong class="error">' . wfMessage('matches-matchid-must-be-a-positive-number')->text() . '</strong>';
-			}
-		} else {
-			return '<strong class="error">' . wfMessage('matches-matchid-cannot-be-empty')->text() . '</strong>'; 
+			return '<strong class="error">' . wfMessage('matches-pageid-cannot-be-empty')->text() . '</strong>';
 		}
 		if (isset($options['date'])) {
 			try {
 				$date = new DateTime($options['date']);
-				$match['date'] = $date;
+				$match['m_date'] = $date;
 			} catch (Exception $ex) {
+				$match['m_date'] = null;
 				return '<strong class="error">' . wfMessage('matches-date-invalid')->text() . '</strong>';
-			}			
-		}
-		if (is_string($options['player1'])){
-			//TODO: Ensure escapation before inserting into db!
-			$match['participation1'] = $options['player1'];
+			}
 		} else {
-			$match['participation1'] = 'TBD';
+			$match['m_date'] = null;
 		}
-		if (is_string($options['player2'])){
+		if (is_string($options['player1'])) {
 			//TODO: Ensure escapation before inserting into db!
-			$match['participant2'] = $options['player2'];
+			$match['participant_1'] = $options['player1'];
 		} else {
-			$match['participant2'] = 'TBD';
+			$match['participant_1'] = 'TBD';
 		}
-		if (is_string($options['tournament'])){
+		if (is_string($options['player2'])) {
+			$match['participant_2'] = $options['player2'];
+		} else {
+			$match['participant_2'] = 'TBD';
+		}
+		if (is_string($options['p1flag'])) {
+			$match['p1_flag'] = $options['p1flag'];
+		} else {
+			$match['p1_flag'] = null;
+		}
+		if (is_string($options['p2flag'])) {
+			$match['p2_flag'] = $options['p2flag'];
+		} else {
+			$match['p2_flag'] = null;
+		}
+		if (is_string($options['p1race'])) {
+			$match['p1_race'] = $options['p1race'];
+		} else {
+			$match['p1_race'] = null;
+		}
+		if (is_string($options['p2race'])) {
+			$match['p2_race'] = $options['p2race'];
+		} else {
+			$match['p2_race'] = null;
+		}
+		if (is_string($options['p1template'])) {
+			$match['p1_template'] = $options['p1template'];
+		} else {
+			$match['p1_template'] = null;
+		}
+		if (is_string($options['p2template'])) {
+			$match['p2_template'] = $options['p2template'];
+		} else {
+			$match['p2_template'] = null;
+		}
+		if (is_string($options['tournament'])) {
 			$match['tournament'] = $options['tournament'];
+		} else {
+			$match['tournament'] = null;
 		}
-		if (is_string($options['tier'])){
+		if (is_string($options['tier'])) {
 			//Maybe compare to array of allowed tiers
-			$match['tier'] = $options['tier'];
+			$match['t_tier'] = $options['tier'];
+		} else {
+			$match['t_tier'] = null;
 		}
-		if (is_string($options['tname'])){
-			$match['tname'] = $options['tname'];
+		if (is_string($options['tname'])) {
+			$match['t_name'] = $options['tname'];
+		} else {
+			$match['t_name'] = null;
 		}
-		if (is_string($options['ticon'])){
-			$match['ticon'] = $options['ticon'];
+		if (is_string($options['ticon'])) {
+			$match['t_icon'] = $options['ticon'];
+		} else {
+			$match['t_icon'] = null;
 		}
 		$match['finished'] = ($options['finished'] == 'true');
-		if (is_numeric($options['p1score'])){
-			$match['p1score'] = $options['p1score'];
+		if (is_numeric($options['p1score'])) {
+			$match['p1_score'] = $options['p1score'];
+		} else {
+			$match['p1_score'] = 0;
 		}
-		if (is_numeric($options['p2score'])){
-			$match['p2score'] = $options['p2score'];
+		if (is_numeric($options['p2score'])) {
+			$match['p2_score'] = $options['p2score'];
+		} else {
+			$match['p2_score'] = 0;
 		}
-		switch($options['winner']){
+		switch ($options['winner']) {
 			case '1':
 				$match['winner'] = 1;
 				break;
@@ -110,14 +150,95 @@ class Matches {
 			case 'draw':
 				$match['winner'] = 'd';
 				break;
+			default:
+				$match['winner'] = null;
 		}
-		if($options['walkover'] == 1 OR $options['walkover'] == 2){
+		if ($options['walkover'] == 1 OR $options['walkover'] == 2) {
 			$match['walkover'] = $options['walkover'];
+		} else {
+			$match['walkover'] = null;
 		}
-		if (is_string($options['mode'])){
+		if (is_string($options['mode'])) {
 			$match['mode'] = $options['mode'];
+		} else {
+			$match['mode'] = null;
+		}
+		if (is_string($options['stream'])) {
+			$match['stream'] = $options['stream'];
+		} else {
+			$match['stream'] = null;
+		}
+		//TODO: Handle details
+		$details = array();
+		if (is_string($options['lrthread'])) {
+			$details['lrthread'] = $options['lrthread'];
+		}
+		if (is_string($options['vod'])) {
+			$details['vod'] = $options['vod'];
+		}
+		if (is_string($options['preview'])) {
+			$details['preview'] = $options ['preview'];
+		}
+		if (is_string($options['review'])) {
+			$details['review'] = $options ['review'];
+		}
+		if (is_string($options['recap'])) {
+			$details['recap'] = $options ['recap'];
+		}
+		if (is_string($options['interview'])) {
+			if (is_string($options['interview2'])) {
+				$interviews = array();
+				$interviews[0] = $options ['interview'];
+				$interviews[1] = $options ['interview2'];
+				$details['interview'] = $interviews;
+			} else {
+				$details['interview'] = $options ['interview'];
+			}
+		}
+		global $wgScriptPath;
+		$wiki = substr($wgScriptPath, 1);
+		switch ($wiki) {
+			case 'counterstrike':
+				if (is_string($options['hltv'])) {
+					$details['hltv'] = $options ['hltv'];
+				}
+				if (is_string($options['hltvlegacy'])) {
+					$details['hltvlegacy'] = $options ['hltvlegacy'];
+				}
+				if (is_string($options['stats'])) {
+					$details['stats'] = $options ['stats'];
+				}
+				if (is_string($options['cevo'])) {
+					$details['cevo'] = $options ['cevo'];
+				}
+				if (is_string($options['esl'])) {
+					$details['esl'] = $options ['esl'];
+				}
+				if (is_string($options['sltv'])) {
+					$details['sltv'] = $options ['sltv'];
+				}
+				if (is_string($options['faceit'])) {
+					$details['faceit'] = $options ['faceit'];
+				}
+				if (is_string($options['sostronk'])) {
+					$details['sostronk'] = $options ['sostronk'];
+				}
+				break;
+			case 'dota2':
+				if (is_string($options['dotabuff'])) {
+					$details['dotabuff'] = $options ['dotabuff'];
+				}
+				break;
+		}
+
+
+		if (!empty($details)) {
+			$match['details'] = json_encode($details);
+		} else {
+			$match['details'] = null;
 		}
 		//TODO: Pass $match to DB function
+		return storeMatchInDB($match);
 	}
 
 	public static function storeGame(&$parser) {
@@ -127,10 +248,58 @@ class Matches {
 		}
 	}
 
-	public static function deleteMatchesAndGames($pageID) {
-		
+	private function storeMatchInDB(array $match) {
+		$logger = LoggerFactory::getInstance('matches-extension');
+		$context = array();
+		$context['match'] = $match;
+		try {
+			$dbw = wfGetDB(DB_MASTER);
+			$res = $dbw->insert(
+					'matches', $match
+			);
+			$matchId = $dbw->inserId();
+			$dbw->close();
+			if ($res == true) {
+				$logger->info('Match successfully stored in DB', $context);
+				return $matchId;
+			}
+			return false;
+		} catch (DBQueryError $e) {
+			$context = array();
+			$context['error'] = $e;
+			$context['match'] = $match;
+			$logger->warning('Insertion of match failed', $context);
+			return '<strong class="error">' . wfMessage('match-could-not-be-stored-in-db')->text() . '</strong>';
+		}
 	}
-	
+
+	public static function deleteMatchesAndGames($pageID) {
+		$logger = LoggerFactory::getInstance('matches-extension');
+		$context = array();
+		$context['match'] = $match;
+		try {
+			$dbw = wfGetDB(DB_MASTER);
+			$conditions = array();
+			$conditions['page_id'] = $pageID;
+			$res = $dbw->delete(
+					'matches',
+					$conditions
+			);			
+			$dbw->close();
+			if ($res == true) {
+				$logger->info('Matches successfully removed from DB', $context);
+				return true;
+			}
+			return false;
+		} catch (DBUnexpectedError $e) {
+			$context = array();
+			$context['error'] = $e;
+			$context['pageID'] = $pageID;
+			$logger->warning('Deletion of matches was not successfull', $context);
+			return '<strong class="error">' . wfMessage('matches-could-not-be-deleted-from-db')->text() . '</strong>';
+		}
+	}
+
 	/**
 	 * Checks if currently parsed Revision is the latest
 	 * @param Parser $parser
