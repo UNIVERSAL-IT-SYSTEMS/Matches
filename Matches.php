@@ -231,14 +231,7 @@ class Matches {
 				break;
 		}
 
-
-		if (!empty($details)) {
-			$match['details'] = json_encode($details);
-		} else {
-			$match['details'] = null;
-		}
-		//TODO: Pass $match to DB function
-		return storeMatchInDB($match);
+		return storeMatchInDB($match, $details);
 	}
 
 	public static function storeGame(&$parser) {
@@ -248,15 +241,47 @@ class Matches {
 		}
 	}
 
-	private function storeMatchInDB(array $match) {
+	private function storeMatchInDB(array $match, array $details) {
 		$logger = LoggerFactory::getInstance('matches-extension');
 		$context = array();
 		$context['match'] = $match;
+		$keys = array_keys($match);
+		global $wgDBPrefix;
+		$sql = 'INSERT INTO '.$wgDBPrefix.'matches (';
+		$first = true;
+		foreach($keys as $tableHead) {
+			if (!$first) {
+				$sql .= ', ';
+			} else {
+				$first = false;
+			}
+			$sql .= $tableHead;
+		}
+		$sql .= ') VALUES (';
+		$first = true;
+		foreach($match as $value) {
+			if (!$first) {
+				$sql .= ', ';
+			} else {
+				$first = false;
+			}
+			$value = mysqli_real_escape_string($value);
+			$sql .= $value;
+		}
+		$sql .= ', COLUMN_CREATE(';
+		$first = true;
+		foreach ($details as $key => $value){
+			if (!$first) {
+				$sql .= ', ';
+			} else {
+				$first = false;
+			}
+			$sql .= '\''.$key.'\',\''.mysqli_real_escape_string($value).'\'';
+		}
+		$sql .= ' ));';
 		try {
 			$dbw = wfGetDB(DB_MASTER);
-			$res = $dbw->insert(
-					'matches', $match
-			);
+			$res = $dbw->query(	$sql);
 			$matchId = $dbw->inserId();
 			$dbw->close();
 			if ($res == true) {

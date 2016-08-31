@@ -1,6 +1,6 @@
 Begin;
 
-CREATE TABLE /*_*/matches(
+CREATE TABLE IF NOT EXISTS /*_*/matches(
 --Primary Key
 m_id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
 --Page ID
@@ -44,11 +44,11 @@ walkover INT,
 --Mode (team, indiv, teamindiv or special modes such as archon or doubles)
 mode VARCHAR(31),
 --Additional details as JSON-Object
-details JSON
+details BLOB
 )/*$wgDBTableOptions*/;
 
-CREATE INDEX /*_*//*i*/matches_p1 ON /*_*/matches (participant_1);
-CREATE INDEX /*_*//*i*/matches_p2 ON /*_*/matches (participant_2);
-CREATE INDEX /*_*//*i*/matches_date ON /*_*/matches (m_date);
+CREATE INDEX IF NOT EXISTS /*_*//*i*/matches_p1 ON /*_*/matches (participant_1);
+CREATE INDEX IF NOT EXISTS /*_*//*i*/matches_p2 ON /*_*/matches (participant_2);
+CREATE INDEX IF NOT EXISTS /*_*//*i*/matches_date ON /*_*/matches (m_date);
 
 Commit;

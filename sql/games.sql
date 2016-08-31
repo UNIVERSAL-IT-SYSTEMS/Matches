@@ -1,9 +1,9 @@
 
 Begin;
 
-CREATE TABLE /*_*/games(
---Primary Key
-m_id INT UNSIGNED NOT NULL FOREIGN KEY REFERENCES /*_*/matches (m_id) ON DELETE CASCADE ON UPDATE CASCADE,
+CREATE TABLE IF NOT EXISTS /*_*/games (
+--Foreign Key
+m_id INT UNSIGNED NOT NULL,
 --Page ID
 page_id INT UNSIGNED NOT NULL,
 --Date
@@ -27,15 +27,17 @@ g_winner CHAR,
 --Mode
 mode VARCHAR(31),
 --Details as JSON-Object (such as hero picks/bans)
-g_details JSON
+g_details BLOB,
+--Mapping m_id to matches (m_id)
+CONSTRAINT `fk_m_id` FOREIGN KEY (m_id) REFERENCES /*_*/matches (m_id) ON DELETE CASCADE ON UPDATE CASCADE
 )/*$wgDBTableOptions*/;
 
 --Automatically genereated for foreign keys
 --CREATE INDEX /*_*//*i*/games_m_id ON /*_*/games (m_id);
-CREATE INDEX /*_*//*i*/games_p_id ON /*_*/games (p_id);
-CREATE INDEX /*_*//*i*/games_winner ON /*_*/games (g_winner);
-CREATE INDEX /*_*//*i*/games_map ON /*_*/games (map);
-CREATE INDEX /*_*//*i*/games_p1_race ON /*_*/games (p1_race);
-CREATE INDEX /*_*//*i*/games_p2_race ON /*_*/games (p2_race);
+CREATE INDEX IF NOT EXISTS /*_*//*i*/games_p_id ON /*_*/games (page_id);
+CREATE INDEX IF NOT EXISTS /*_*//*i*/games_winner ON /*_*/games (g_winner);
+CREATE INDEX IF NOT EXISTS /*_*//*i*/games_map ON /*_*/games (map);
+CREATE INDEX IF NOT EXISTS /*_*//*i*/games_p1_race ON /*_*/games (p1_race);
+CREATE INDEX IF NOT EXISTS /*_*//*i*/games_p2_race ON /*_*/games (p2_race);
 
 Commit;

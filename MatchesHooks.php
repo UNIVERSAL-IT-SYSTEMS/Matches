@@ -55,11 +55,8 @@ class MatchesHooks {
 	public static function onLoadExtensionSchemaUpdates(DatabaseUpdater $updater ) {
 		global $wgScriptPath;
 		$wiki = substr($wgScriptPath, 1 );
-		$updater->addExtensionTable('matches_' . $wiki .
-			'_matches', __DIR__ . '/sql/matches.sql');
-		$updater->addExtensionTable('matches_' . $wiki .
-			'_games', __DIR__ . '/sql/games.sql');
-		
+		$updater->addExtensionTable('matches', __DIR__ . '/sql/matches.sql');
+		$updater->addExtensionTable('games', __DIR__ . '/sql/games.sql');
 	}
 }
 ?>
