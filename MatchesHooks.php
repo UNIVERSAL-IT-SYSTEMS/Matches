@@ -61,10 +61,25 @@ class MatchesHooks {
 		$updater->addExtensionTable('games', __DIR__ . '/sql/games.sql');
 		return true;
 	}
-	public static function onParserBeforeTidy(){
-		$mDB = MatchesDB::getInstance();
-		$mDB->setFirstParsingRun(false);
-		$GLOBALS['matchesFirstParsingRun'] = false;
+	public static function onPageContentSaveComplete($article, $user, $content, $summary, $isMinor,
+		$isWatch, $section, $flags, $status){
+		$pageID = $article->getId();
+		MatchesDB::$store = true;
+		Matches::deleteMatchesAndGames($pageID);		
+		$pageContents = $content->getNativeData();
+		global $wgParser;
+		// Special handling for the Approved Revs extension.
+		$pageText = null;
+		$approvedText = null;
+		if ( class_exists( 'ApprovedRevs' ) ) {
+			$approvedText = ApprovedRevs::getApprovedContent( $title );
+		}
+		if ( $approvedText != null ) {
+			$pageText = $approvedText;
+		} else {
+			$pageText = $pageContents;
+		}
+		$wgParser->parse( $pageText, $article->getTitle(), new ParserOptions() );
 	}
 	public static function onArticlePurge(&$article) {
 		$pageID = $article->getId();

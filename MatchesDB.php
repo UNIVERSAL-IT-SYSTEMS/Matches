@@ -27,7 +27,7 @@ class MatchesDB {
 	private $db = null;
 	protected static $_instance = null;
 	private $isFirstParsingRun = true;
-	
+	public static $store = false;
 	public static function getInstance() {
 		if (null === self::$_instance) {
 			self::$_instance = new self;
@@ -49,6 +49,9 @@ class MatchesDB {
 		$this->isFirstParsingRun = $firstRun;
 	}
 	public function connect() {
+		if (!self::$store){
+			return true;
+		}
 		global $wgDBserver, $wgDBuser, $wgDBpassword, $wgDBname;
 		$this->db = new mysqli($wgDBserver, $wgDBuser, $wgDBpassword, $wgDBname);
 		if ($this->db->connect_errno) {
@@ -57,13 +60,13 @@ class MatchesDB {
 	}
 
 	public function insertMatch(array $match, array $details) {
+		if (!self::$store){
+			return;
+		}
 		if ($this->db == null) {
 			return false;
 		}
 		if ($match['page_id'] == 0) {
-			return false;
-		}
-		if ($GLOBALS['matchesFirstParsingRun'] == false) {
 			return false;
 		}
 		global $wgDBPrefix;
@@ -122,6 +125,9 @@ class MatchesDB {
 //		if ($GLOBALS['matchesFirstParsingRun'] == false) {
 //			return false;
 //		}
+		if (!self::$store){
+			return;
+		}
 		global $wgDBPrefix;
 		$sql = 'INSERT INTO ' . $wgDBPrefix . 'games (';
 		$keys = array_keys($game);

@@ -31,8 +31,8 @@
 		"ArticlePurge": [
 			"MatchesHooks::onArticlePurge"
 		],
-		"OutputPageBeforeHTML": [
-			"MatchesHooks::onParserBeforeTidy"
+		"PageContentSaveComplete": [
+			"MatchesHooks::onPageContentSaveComplete"
 		]
 	},
 	"AutoloadClasses": {
