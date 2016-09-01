@@ -30,21 +30,31 @@ class Matches {
 	 * @return: Returns highest matchID + 1
 	 */
 
-	public static function storeMatch($parser) {
+	public static function storeMatch(&$parser) {
+		//$parser->disableCache();
+		$mDB = MatchesDB::getInstance();
+		if (!$mDB->isFirstParsingRun()) {
+			return;
+		}
 		$matches = new Matches();
 		$options = $matches->extractOptions(array_slice(func_get_args(), 1));
-		if (!$matches->isParsingLatestRevision($parser)) {
-			return false;
+//		if (!$matches->isParsingLatestRevision($parser)) {
+//			return false;
+//		}
+		if ($parser->getOptions()->getIsPreview()) {
+			return true;
 		}
 		$match = array();
 		$match['m_id'] = null;
-		$title = $parser->getTitle();
-		$pageID = $title->getArticleID();
-		$match['page_id'] = $pageID;
-		
+		if (isset($options['page_id'])){
+			$match['page_id'] = $options['page_id'];
+		} else {
+			return false;
+		}	
+
 		if (isset($options['date'])) {
 			//try {				
-				$match['m_date'] = $options['date']; //$date->format(DateTime::ATOM);
+			$match['m_date'] = $options['date']; //$date->format(DateTime::ATOM);
 			//} catch (Exception $ex) {
 			//	$match['m_date'] = null;
 			//	return '<strong class="error">' . wfMessage('matches-date-invalid')->text() . '</strong>';
@@ -92,7 +102,7 @@ class Matches {
 			$match['p2_race'] = $options['p2race'];
 		} else {
 			$match['p2_race'] = null;
-		}		
+		}
 		if (isset($options['tournament'])) {
 			$match['tournament'] = $options['tournament'];
 		} else {
@@ -116,17 +126,17 @@ class Matches {
 		}
 		$match['finished'] = ($options['finished'] == 'true');
 		if (isset($options['p1score'])) {
-			if (is_numeric($options['p1score'])){
+			if (is_numeric($options['p1score'])) {
 				$match['p1_score'] = $options['p1score'];
 			} else {
 				$match['p1_score'] = 0;
-			}			
+			}
 		} else {
 			$match['p1_score'] = 0;
 		}
-		
+
 		if (isset($options['p2score'])) {
-			if (is_numeric($options['p2score'])){
+			if (is_numeric($options['p2score'])) {
 				$match['p2_score'] = $options['p2score'];
 			} else {
 				$match['p2_score'] = 0;
@@ -134,40 +144,40 @@ class Matches {
 		} else {
 			$match['p2_score'] = 0;
 		}
-		if (isset($options['winner'])){
+		if (isset($options['winner'])) {
 			switch ($options['winner']) {
-			case '1':
-				$match['winner'] = 1;
-				break;
-			case '2':
-				$match['winner'] = 2;
-				break;
-			case 'draw':
-				$match['winner'] = 'd';
-				break;
-			default:
-				$match['winner'] = null;
-		}
+				case '1':
+					$match['winner'] = 1;
+					break;
+				case '2':
+					$match['winner'] = 2;
+					break;
+				case 'draw':
+					$match['winner'] = 'd';
+					break;
+				default:
+					$match['winner'] = null;
+			}
 		} else {
 			$match['winner'] = null;
 		}
-		
-		if (isset($options['walkover'])){
+
+		if (isset($options['walkover'])) {
 			if ($options['walkover'] == 1 OR $options['walkover'] == 2) {
-			$match['walkover'] = $options['walkover'];
+				$match['walkover'] = $options['walkover'];
+			} else {
+				$match['walkover'] = null;
+			}
 		} else {
 			$match['walkover'] = null;
 		}
-		} else {
-			$match['walkover'] = null;
-		}
-		
+
 		if (isset($options['mode'])) {
 			$match['mode'] = $options['mode'];
 		} else {
 			$match['mode'] = null;
 		}
-				//TODO: Handle details
+		//TODO: Handle details
 		$details = array();
 		if (isset($options['stream'])) {
 			$details['stream'] = $options['stream'];
@@ -239,43 +249,155 @@ class Matches {
 	}
 
 	public static function storeGame(&$parser) {
-		$options = extractOptions(array_slice(func_get_args(), 1));
-		if (!isParsingLatestRevision($parser)) {
+		$matches = new Matches();
+		$options = $matches->extractOptions(array_slice(func_get_args(), 1));
+		if (!$matches->isParsingLatestRevision($parser)) {
 			return false;
 		}
+		$game = array();
+		if (isset($options['m_id'])) {
+			$game['m_id'] = $options['m_id'];
+		} else {
+			return false;
+		}
+		if (isset($options['page_id'])) {
+			$game['page_id'] = $options['page_id'];
+		} else {
+			return false;
+		}
+		if (isset($options['date'])) {
+			$game['m_date'] = $options['date'];
+		}
+		if (isset($options['p1_flag'])) {
+			$game['p1flag'] = $options['p1_flag'];
+		}
+		if (isset($options['p2_flag'])) {
+			$game['p2_flag'] = $options['p2_flag'];
+		}
+		if (isset($options['g_length'])) {
+			$game['g_length'] = $options['g_length'];
+		}
+		if (isset($options['map'])) {
+			$game['map'] = $options['map'];
+		}
+		if (isset($options['finished'])) {
+			if (is_bool($options['finished'])) {
+				$game['finished'] = $options['finished'];
+			}
+		}
+		if (isset($options['g_winner'])) {
+			switch ($options['g_winner']) {
+				case '1':
+					$game['g_winner'] = 1;
+					break;
+				case '2':
+					$game['g_winner'] = 2;
+					break;
+				case 'draw':
+					$game['g_winner'] = 'd';
+					break;
+				default:
+					$game['g_winner'] = null;
+			}
+		}
+		if (isset($options['mode'])){
+			$game['mode'] = $options['mode'];
+		}
+		$details = array();
+		if (isset($options['vod'])){
+			$details['vod'] = $options['vod'];
+		}
+		global $wgScriptPath;
+		$wiki = substr($wgScriptPath, 1);
+		switch($wiki){
+			case 'counterstrike':
+				if (isset($options['stats'])){
+					$details['stats'] = $options['stats'];
+				}
+				if (isset($options['esea'])){
+					$details['esea'] = $options['esea'];
+				}
+				if (isset($options['5ewin'])){
+					$details['5ewin'] = $options['5ewin'];
+				}
+				if (isset($options['challengeme'])){
+					$details['challengeme'] = $options['challengeme'];
+				}
+				if (isset($options['gotfrag'])){
+					$details['gotfrag'] = $options['gotfrag'];
+				}
+				if (isset($options['t1firstside'])){
+					$details['t1firstside'] = $options['t1firstside'];
+				}
+				if (isset($options['t1t'])){
+					$details['t1t'] = $options['t1t'];
+				}
+				if (isset($options['t1ct'])){
+					$details['t1ct'] = $options['t1ct'];
+				}
+				if (isset($options['t2t'])){
+					$details['t2t'] = $options['t2t'];
+				}
+				if (isset($options['t2ct'])){
+					$details['t2ct'] = $options['t2ct'];
+				}
+				for ($j = 1; $j++; $j<7){
+					for ($i = 1; $i++; $i<3){
+						if (isset($options['o'.$j.'t'.$i.'t'])){
+							$details['o'.$j.'t'.$i.'t'] = $options['o'.$j.'t'.$i.'t'];
+						}
+						if (isset($options['o'.$j.'t'.$i.'ct'])){
+							$details['o'.$j.'t'.$i.'ct'] = $options['o'.$j.'t'.$i.'ct'];
+						}
+					}
+				}
+				break;
+			case 'dota2': {
+				for ($j=1; $j++; $j<3){
+					for ($i=1; $i++; $i<6){
+						if (isset($options['t'.$j.'h'.$i])){
+							$details['t'.$j.'h'.$i] = $options['t'.$j.'h'.$i];
+						}
+					}
+				}
+				if (isset($options['t1side'])){
+					$details['t1side'] = $options['t1side'];
+				}
+				if (isset($options['t2side'])){
+					$details['t2side'] = $options['t2side'];
+				}
+				if (isset($options['dotabuff'])){
+					$details['dotabuff'] = $options['dotabuff'];
+				}				
+				break;
+			}
+		}
+		return self::storeGameInDB($game, $details);
 	}
 
 	private function storeMatchInDB(array $match, array $details) {
-		$mDB = new MatchesDB();
+		$mDB = MatchesDB::getInstance();
+		$mDB->connect();
 		$id = $mDB->insertmatch($match, $details);
 		$mDB->close();
 		return $id;
 	}
-
+	
+	private function storeGameInDB(array $game, array $details) {
+		$mDB = MatchesDB::getInstance();
+		$mDB->connect();
+		$id = $mDB->insertGame($game, $details);
+		$mDB->close();
+		return $id;
+	}
+	
 	public static function deleteMatchesAndGames($pageID) {
-		$logger = LoggerFactory::getInstance('matches-extension');
-		$context = array();
-		$context['match'] = $match;
-		try {
-			$dbw = wfGetDB(DB_MASTER);
-			$conditions = array();
-			$conditions['page_id'] = $pageID;
-			$res = $dbw->delete(
-					'matches', $conditions
-			);
-			$dbw->close();
-			if ($res == true) {
-				$logger->info('Matches successfully removed from DB', $context);
-				return true;
-			}
-			return false;
-		} catch (DBUnexpectedError $e) {
-			$context = array();
-			$context['error'] = $e;
-			$context['pageID'] = $pageID;
-			$logger->warning('Deletion of matches was not successfull', $context);
-			return '<strong class="error">' . wfMessage('matches-could-not-be-deleted-from-db')->text() . '</strong>';
-		}
+		$mDB = MatchesDB::getInstance();
+		$mDB->connect();
+		$id = $mDB->deleteMatches($pageID);
+		$id = $mDB->deleteGames($pageID);
+		$mDB->close();
+		return $id;
 	}
 
 	/**
@@ -285,6 +407,8 @@ class Matches {
 	 */
 	private function isParsingLatestRevision(Parser $parser) {
 		$mTitle = $parser->getTitle();
+		echo $mTitle;
+		return true;
 		if ($mTitle == null) {
 			return false;
 		}

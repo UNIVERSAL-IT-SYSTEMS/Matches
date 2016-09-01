@@ -27,6 +27,12 @@
 		],
 		"TitleMoveComplete": [
 			"MatchesHook::onTitleMoveComplete"
+		],
+		"ArticlePurge": [
+			"MatchesHooks::onArticlePurge"
+		],
+		"OutputPageBeforeHTML": [
+			"MatchesHooks::onParserBeforeTidy"
 		]
 	},
 	"AutoloadClasses": {

@@ -23,8 +23,11 @@ class MatchesHooks {
 	/ Registering render callbacks with the parser
 	*/
 	public static function onParserFirstCallInit ( &$parser ) {
-		$parser->setFunctionHook( 'storematch', 'Matches::storeMatch' );
-		$parser->setFunctionHook( 'storegame', 'Matches::storeGame' );
+		$parser->setFunctionHook( 'storematch', array('Matches', 'storeMatch' ));
+		$parser->setFunctionHook( 'storegame', array('Matches', 'storeGame' ));
+		$mDB = MatchesDB::getInstance();
+		$GLOBALS['matchesFirstParsingRun'] = true;
+		return true;
 	}
 	
 	/*
@@ -56,10 +59,16 @@ class MatchesHooks {
 		$wiki = substr($wgScriptPath, 1 );
 		$updater->addExtensionTable('matches', __DIR__ . '/sql/matches.sql');
 		$updater->addExtensionTable('games', __DIR__ . '/sql/games.sql');
+		return true;
 	}
-	
-	public static function onPageContentSaveComplete($article) {
-		$pageID = $article->getPage()->getId();
+	public static function onParserBeforeTidy(){
+		$mDB = MatchesDB::getInstance();
+		$mDB->setFirstParsingRun(false);
+		$GLOBALS['matchesFirstParsingRun'] = false;
+	}
+	public static function onArticlePurge(&$article) {
+		$pageID = $article->getId();
+		echo $pageID;
 		return Matches::deleteMatchesAndGames($pageID);
 	}
 }
