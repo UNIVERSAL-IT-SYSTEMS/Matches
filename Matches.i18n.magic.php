@@ -23,7 +23,6 @@ $magicWords = array();
  * English
  */
 $magicWords['en'] = array(
-	'StoreMatch' => array( 0, 'store_match'),
-	'StoreGame' => array( 0, 'store_game'),
-	'MatchID' => array( 0, 'match_id')
+	'storematch' => array( 0, 'storematch'),
+	'storegame' => array( 0, 'storegame')
 );

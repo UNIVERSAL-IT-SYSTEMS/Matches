@@ -22,15 +22,17 @@
 		"ParserFirstCallInit": [
 			"MatchesHooks::onParserFirstCallInit"
 		],
-		"OnArticleDeleteComplete": [ 
+		"ArticleDeleteComplete": [ 
 			"MatchesHooks::onArticleDeleteComplete" 
 		],
-		"OnTitleMoveComplete": [
+		"TitleMoveComplete": [
 			"MatchesHook::onTitleMoveComplete"
-		]		
+		]
 	},
 	"AutoloadClasses": {
-		"MatchesHooks": "MatchesHooks.php"
+		"MatchesHooks": "MatchesHooks.php",
+		"Matches": "Matches.php",
+		"MatchesDB": "MatchesDB.php"
 	},
 	"manifest_version": 1
 }

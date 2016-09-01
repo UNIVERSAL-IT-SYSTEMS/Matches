@@ -23,9 +23,8 @@ class MatchesHooks {
 	/ Registering render callbacks with the parser
 	*/
 	public static function onParserFirstCallInit ( &$parser ) {
-		$parser->setFunctionHook( 'StoreMatch', 'Matches::storeMatch' );
-		$parser->setFunctionHook( 'StoreGame', 'Matches::storeGame' );
-		$parser->setFunctionHook( 'MatchID', 'Matches::getMatchID' );
+		$parser->setFunctionHook( 'storematch', 'Matches::storeMatch' );
+		$parser->setFunctionHook( 'storegame', 'Matches::storeGame' );
 	}
 	
 	/*
@@ -57,6 +56,11 @@ class MatchesHooks {
 		$wiki = substr($wgScriptPath, 1 );
 		$updater->addExtensionTable('matches', __DIR__ . '/sql/matches.sql');
 		$updater->addExtensionTable('games', __DIR__ . '/sql/games.sql');
+	}
+	
+	public static function onPageContentSaveComplete($article) {
+		$pageID = $article->getPage()->getId();
+		return Matches::deleteMatchesAndGames($pageID);
 	}
 }
 ?>
